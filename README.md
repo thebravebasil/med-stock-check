@@ -2,14 +2,19 @@
 
 A simple, free inventory tracker built to help small clinics, school nurse offices, or community health stations keep track of medical supplies — gloves, bandages, wipes, and more — so nothing runs out unnoticed.
 
-Built as a student community-service project by **Mohammad Basil**.
+Built as a student community-service project by **[your name here]**.
 
 ## What it does
 
 - Add supply items with a category, quantity, and a "low stock" threshold
 - See each item's stock level at a glance with a fill-bar visual
 - Get an automatic **low stock** or **out of stock** badge
-- Search and filter by category
+- Search, filter by category, and sort (most urgent, name, quantity, or last restocked)
+- Add a short note to any item (e.g. "ask Dr. Lee before reordering")
+- Track when each item was **last restocked**, updated automatically when you add stock
+- **Export a shopping list as a CSV** of everything currently low or out of stock
+- Undo an accidental delete within a few seconds
+- Toggle **dark mode**
 - Works entirely in the browser — no account, no server, no patient data collected
 
 ## Why I built this
@@ -30,10 +35,8 @@ It's also live at:
 
 ## Ideas for what's next
 
-- [ ] Export the supply list as a CSV file
-- [ ] Add a "last restocked" date per item
 - [ ] Let multiple people share one list (would need a real backend/database)
-- [ ] Print a "shopping list" of everything below threshold
+- [ ] Barcode scanning to add/update items instantly
 
 ## License
 
