@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Shelf — Clinic Inventory Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Design tokens ----------
+     Background:  #EAF0EC  (soft sage — clinical without being sterile white)
+     Card:        #FFFFFF
+     Ink:         #1B4B43  (deep teal — headings, primary actions)
+     Ink-soft:    #4C6B64
+     Amber:       #E8A33D  (low stock warning)
+     Coral:       #E2584A  (out of stock / critical)
+     Line:        #D3DED8
+     Display font: Fraunces (headings)
+     Body font:    IBM Plex Sans
+     Data font:    IBM Plex Mono (counts, tallies)
+  ------------------------------------ */
+  :root{
+    --bg:#EAF0EC;
+    --card:#FFFFFF;
+    --ink:#1B4B43;
+    --ink-soft:#4C6B64;
+    --amber:#E8A33D;
+    --coral:#E2584A;
+    --line:#D3DED8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  header{
+    margin-bottom:32px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:38px;
+    margin:0 0 8px;
+    line-height:1.05;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:15px;
+    margin:0;
+    max-width:46ch;
+  }
+
+  /* Add-item card */
+  .add-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:28px;
+  }
+  .add-card h2{
+    font-family:'Fraunces', serif;
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 14px;
+  }
+  .add-row{
+    display:grid;
+    grid-template-columns:2fr 1.1fr 0.8fr 0.8fr auto;
+    gap:10px;
+  }
+  @media (max-width: 640px){
+    .add-row{grid-template-columns:1fr 1fr; }
+    .add-row button{grid-column:1 / -1;}
+  }
+  label{
+    display:block;
+    font-size:11px;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:5px;
+  }
+  input, select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:#fff;
+  }
+  input:focus, select:focus, button:focus{
+    outline:2px solid var(--ink);
+    outline-offset:1px;
+  }
+  .add-row button{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:0 16px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    height:38px;
+    margin-top:19px;
+  }
+  .add-row button:hover{ opacity:0.9; }
+
+  /* Filter bar */
+  .filter-bar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .filter-bar input[type="search"]{
+    flex:1;
+  }
+  .filter-bar select{
+    max-width:160px;
+  }
+
+  /* Shelf list */
+  .shelf-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin:22px 0 10px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  .item{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .vial{
+    width:26px;
+    height:52px;
+    border:2px solid var(--ink);
+    border-top:none;
+    border-radius:0 0 8px 8px;
+    position:relative;
+    flex-shrink:0;
+    background:#fff;
+    overflow:hidden;
+  }
+  .vial::before{
+    content:"";
+    position:absolute;
+    top:-2px; left:-4px; right:-4px;
+    height:5px;
+    background:var(--ink);
+    border-radius:2px;
+  }
+  .vial-fill{
+    position:absolute;
+    bottom:0; left:0; right:0;
+    background:var(--fill-color, var(--ink));
+    transition:height 0.25s ease;
+  }
+  .item-main{
+    flex:1;
+    min-width:0;
+  }
+  .item-name{
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 2px;
+  }
+  .item-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:20px;
+    margin-left:8px;
+    letter-spacing:0.03em;
+  }
+  .badge.low{ background:#FCEFD9; color:#9C6A16; }
+  .badge.out{ background:#FBE1DD; color:var(--coral); }
+
+  .qty-controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .qty-controls button{
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:#fff;
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .qty-controls button:hover{ background:var(--bg); }
+  .qty-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:16px;
+    min-width:28px;
+    text-align:center;
+  }
+  .remove-btn{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:12px;
+    cursor:pointer;
+    text-decoration:underline;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .remove-btn:hover{ color:var(--coral); }
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+    font-family:'Fraunces', serif;
+    font-size:17px;
+    border:1px dashed var(--line);
+    border-radius:14px;
+  }
+
+  footer{
+    margin-top:48px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Community Health Project</p>
+    <h1>Supply Shelf</h1>
+    <p class="sub">A simple inventory tracker for clinic supplies — add items, track quantities, and see at a glance what's running low.</p>
+  </header>
+
+  <section class="add-card">
+    <h2>Add a supply item</h2>
+    <div class="add-row">
+      <div>
+        <label for="in-name">Item name</label>
+        <input id="in-name" type="text" placeholder="e.g. Nitrile gloves (box)">
+      </div>
+      <div>
+        <label for="in-category">Category</label>
+        <select id="in-category">
+          <option>PPE</option>
+          <option>Bandages</option>
+          <option>Medication</option>
+          <option>Equipment</option>
+          <option>Cleaning</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="in-qty">Quantity</label>
+        <input id="in-qty" type="number" min="0" value="10">
+      </div>
+      <div>
+        <label for="in-threshold">Low at</label>
+        <input id="in-threshold" type="number" min="0" value="3">
+      </div>
+      <button id="add-btn">Add item</button>
+    </div>
+  </section>
+
+  <div class="filter-bar">
+    <input type="search" id="search" placeholder="Search supplies…">
+    <select id="filter-category">
+      <option value="all">All categories</option>
+      <option>PPE</option>
+      <option>Bandages</option>
+      <option>Medication</option>
+      <option>Equipment</option>
+      <option>Cleaning</option>
+      <option>Other</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+
+  <footer>
+    Supply Shelf — built as a student community project. Data is stored only in this browser (no server, no patient data).
+  </footer>
+
+</div>
+
+<script>
+/*
+  ---- How this works (for the person reading/learning the code) ----
+  1. `items` is our list of supplies, stored as an array of objects.
+  2. We save it to the browser's localStorage every time it changes, so
+     your data is still there if you close the tab and come back.
+  3. `render()` clears the list on screen and redraws it based on `items`,
+     applying the current search text and category filter.
+  4. Each item shows a "vial" — a little bar that fills up based on how
+     full its stock is compared to a max reference amount.
+*/
+
+const STORAGE_KEY = "supply-shelf-items";
+
+let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+// If it's someone's very first time, seed a couple of example items
+// so the page isn't confusingly empty.
+if (items.length === 0) {
+  items = [
+    { id: cryptoId(), name: "Nitrile gloves (box)", category: "PPE", qty: 8, threshold: 3, max: 20 },
+    { id: cryptoId(), name: "Adhesive bandages", category: "Bandages", qty: 2, threshold: 5, max: 30 },
+    { id: cryptoId(), name: "Alcohol wipes", category: "Cleaning", qty: 15, threshold: 5, max: 20 }
+  ];
+  save();
+}
+
+function cryptoId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function statusOf(item) {
+  if (item.qty <= 0) return "out";
+  if (item.qty <= item.threshold) return "low";
+  return "ok";
+}
+
+function fillColor(status) {
+  if (status === "out") return "var(--coral)";
+  if (status === "low") return "var(--amber)";
+  return "var(--ink)";
+}
+
+function render() {
+  const list = document.getElementById("list");
+  const query = document.getElementById("search").value.trim().toLowerCase();
+  const catFilter = document.getElementById("filter-category").value;
+
+  const filtered = items.filter(item => {
+    const matchesQuery = item.name.toLowerCase().includes(query);
+    const matchesCat = catFilter === "all" || item.category === catFilter;
+    return matchesQuery && matchesCat;
+  });
+
+  list.innerHTML = "";
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty">Nothing here yet. Add a supply above to start tracking your shelf.</div>`;
+    return;
+  }
+
+  // Group by category for a shelf-by-shelf feel
+  const groups = {};
+  filtered.forEach(item => {
+    if (!groups[item.category]) groups[item.category] = [];
+    groups[item.category].push(item);
+  });
+
+  Object.keys(groups).forEach(category => {
+    const label = document.createElement("div");
+    label.className = "shelf-label";
+    label.textContent = category;
+    list.appendChild(label);
+
+    groups[category].forEach(item => {
+      const status = statusOf(item);
+      const fillPct = Math.max(0, Math.min(100, (item.qty / item.max) * 100));
+
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="vial">
+          <div class="vial-fill" style="height:${fillPct}%; --fill-color:${fillColor(status)};"></div>
+        </div>
+        <div class="item-main">
+          <p class="item-name">${escapeHtml(item.name)}
+            ${status === "low" ? '<span class="badge low">low stock</span>' : ""}
+            ${status === "out" ? '<span class="badge out">out of stock</span>' : ""}
+          </p>
+          <p class="item-meta">low-stock alert at ${item.threshold} &nbsp;·&nbsp; <button class="remove-btn" data-id="${item.id}">remove</button></p>
+        </div>
+        <div class="qty-controls">
+          <button data-action="dec" data-id="${item.id}">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button data-action="inc" data-id="${item.id}">+</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Event: add new item
+document.getElementById("add-btn").addEventListener("click", () => {
+  const nameInput = document.getElementById("in-name");
+  const name = nameInput.value.trim();
+  if (!name) {
+    nameInput.focus();
+    return;
+  }
+  const category = document.getElementById("in-category").value;
+  const qty = parseInt(document.getElementById("in-qty").value, 10) || 0;
+  const threshold = parseInt(document.getElementById("in-threshold").value, 10) || 0;
+  const max = Math.max(qty, threshold * 4, 10); // reference point for the vial fill
+
+  items.push({ id: cryptoId(), name, category, qty, threshold, max });
+  save();
+  render();
+
+  nameInput.value = "";
+  nameInput.focus();
+});
+
+// Event delegation: qty buttons + remove buttons
+document.getElementById("list").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+
+  if (btn.dataset.action === "inc") item.qty += 1;
+  if (btn.dataset.action === "dec") item.qty = Math.max(0, item.qty - 1);
+  if (btn.classList.contains("remove-btn")) {
+    items = items.filter(i => i.id !== id);
+  }
+
+  save();
+  render();
+});
+
+// Search + filter
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filter-category").addEventListener("change", render);
+
+render();
+</script>
+</body>
+</html>
