@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Supply Shelf</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF0EC; --card:#FFFFFF; --ink:#1B4B43; --ink-soft:#4C6B64;
+    --amber:#E8A33D; --coral:#E2584A; --line:#D3DED8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased; padding:20px;
+  }
+  .card{
+    width:100%; max-width:380px; background:var(--card);
+    border:1px solid var(--line); border-radius:16px; padding:28px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--ink-soft); margin:0 0 6px;
+  }
+  h1{ font-family:'Fraunces', serif; font-weight:600; font-size:28px; margin:0 0 6px; }
+  .sub{ color:var(--ink-soft); font-size:14px; margin:0 0 22px; }
+  .mode-toggle{
+    display:flex; gap:6px; background:var(--bg); border-radius:10px; padding:4px; margin-bottom:20px;
+  }
+  .mode-toggle button{
+    flex:1; padding:8px; border:none; border-radius:7px; background:none;
+    font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:13px;
+    color:var(--ink-soft); cursor:pointer;
+  }
+  .mode-toggle button.active{ background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  label{
+    display:block; font-size:11px; font-family:'IBM Plex Mono', monospace; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.06em; margin:0 0 5px;
+  }
+  .field{ margin-bottom:14px; }
+  input{
+    width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px;
+    font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:var(--ink); background:#fff;
+  }
+  input:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+  .hint{ font-size:12px; color:var(--ink-soft); margin-top:5px; }
+  button.submit{
+    width:100%; background:var(--ink); color:#fff; border:none; border-radius:9px;
+    padding:12px; font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:14px;
+    cursor:pointer; margin-top:6px;
+  }
+  button.submit:hover{ opacity:0.92; }
+  button.submit:disabled{ opacity:0.6; cursor:default; }
+  .error{
+    background:#FBE1DD; color:var(--coral); font-size:13px; padding:10px 12px;
+    border-radius:8px; margin-bottom:14px; display:none;
+  }
+  .error.show{ display:block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <p class="eyebrow">Supply Shelf</p>
+  <h1>Team sign in</h1>
+  <p class="sub">Sign in or create an account to see your clinic's shared supply list.</p>
+
+  <div class="mode-toggle">
+    <button id="tab-signin" class="active" type="button">Sign in</button>
+    <button id="tab-signup" type="button">Create account</button>
+  </div>
+
+  <div id="error-box" class="error"></div>
+
+  <form id="auth-form">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" required autocomplete="current-password" minlength="6">
+      <p class="hint" id="pw-hint" style="display:none;">At least 6 characters.</p>
+    </div>
+    <div class="field">
+      <label for="clinic-code">Clinic code</label>
+      <input id="clinic-code" type="text" required placeholder="e.g. northside-clinic" autocomplete="off">
+      <p class="hint">Everyone who enters the same code shares the same supply list. Make one up, and share it with your team.</p>
+    </div>
+    <button type="submit" class="submit" id="submit-btn">Sign in</button>
+  </form>
+</div>
+
+<script type="module">
+import { auth } from "./firebase-init.js";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+const CLINIC_KEY = "supply-shelf-clinic";
+
+let mode = "signin";
+
+const tabSignIn = document.getElementById("tab-signin");
+const tabSignUp = document.getElementById("tab-signup");
+const submitBtn = document.getElementById("submit-btn");
+const pwHint = document.getElementById("pw-hint");
+const errorBox = document.getElementById("error-box");
+const form = document.getElementById("auth-form");
+
+function setMode(newMode) {
+  mode = newMode;
+  tabSignIn.classList.toggle("active", mode === "signin");
+  tabSignUp.classList.toggle("active", mode === "signup");
+  submitBtn.textContent = mode === "signin" ? "Sign in" : "Create account";
+  pwHint.style.display = mode === "signup" ? "block" : "none";
+  errorBox.classList.remove("show");
+}
+tabSignIn.addEventListener("click", () => setMode("signin"));
+tabSignUp.addEventListener("click", () => setMode("signup"));
+
+function showError(message) {
+  errorBox.textContent = message;
+  errorBox.classList.add("show");
+}
+
+// Friendlier text for common Firebase error codes
+function friendlyError(err) {
+  const code = err.code || "";
+  if (code.includes("email-already-in-use")) return "That email already has an account — try signing in instead.";
+  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "Email or password didn't match. Try again, or create an account.";
+  if (code.includes("weak-password")) return "Password needs to be at least 6 characters.";
+  if (code.includes("invalid-email")) return "That email address doesn't look right.";
+  return "Something went wrong: " + err.message;
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorBox.classList.remove("show");
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const clinicCode = document.getElementById("clinic-code").value.trim().toLowerCase().replace(/\s+/g, "-");
+
+  if (!clinicCode) {
+    showError("Enter a clinic code so we know which shared list to open.");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Please wait…";
+
+  try {
+    if (mode === "signin") {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+    localStorage.setItem(CLINIC_KEY, clinicCode);
+    window.location.href = "index.html";
+  } catch (err) {
+    showError(friendlyError(err));
+    submitBtn.disabled = false;
+    submitBtn.textContent = mode === "signin" ? "Sign in" : "Create account";
+  }
+});
+
+// If already signed in, skip straight to the tracker
+onAuthStateChanged(auth, (user) => {
+  if (user && localStorage.getItem(CLINIC_KEY)) {
+    window.location.href = "index.html";
+  }
+});
+</script>
+</body>
+</html>

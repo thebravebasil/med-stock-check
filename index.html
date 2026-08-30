@@ -51,6 +51,31 @@
     margin:0 auto;
     padding:40px 20px 80px;
   }
+
+  /* Account bar */
+  .account-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:20px;
+    font-size:13px;
+    color:var(--ink-soft);
+    flex-wrap:wrap;
+  }
+  .account-bar strong{ color:var(--ink); }
+  .account-bar .right{ display:flex; align-items:center; gap:10px; }
+  .link-btn{
+    background:none; border:none; color:var(--ink-soft);
+    text-decoration:underline; cursor:pointer; font-size:13px;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .link-btn:hover{ color:var(--coral); }
+
   header{
     margin-bottom:32px;
     display:flex;
@@ -76,64 +101,6 @@
     justify-content:center;
   }
   .icon-btn:hover{ background:var(--bg); }
-
-  .toolbar{
-    display:flex;
-    gap:10px;
-    margin-bottom:16px;
-    flex-wrap:wrap;
-  }
-  .toolbar button, .toolbar select{
-    font-family:'IBM Plex Sans', sans-serif;
-    font-size:13px;
-    font-weight:500;
-    padding:8px 12px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--card);
-    color:var(--ink);
-    cursor:pointer;
-  }
-  .toolbar button:hover{ background:var(--bg); }
-
-  .item-notes{
-    width:100%;
-    margin-top:6px;
-    padding:6px 8px;
-    font-size:12px;
-    border:1px solid var(--line);
-    border-radius:6px;
-    background:var(--bg);
-    color:var(--ink-soft);
-    font-family:'IBM Plex Sans', sans-serif;
-  }
-  .item-notes:focus{ color:var(--ink); }
-
-  .undo-toast{
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%) translateY(0);
-    background:var(--ink);
-    color:var(--bg);
-    padding:10px 16px;
-    border-radius:10px;
-    font-size:13px;
-    display:flex;
-    gap:14px;
-    align-items:center;
-    box-shadow:0 6px 20px rgba(0,0,0,0.2);
-    z-index:10;
-  }
-  .undo-toast button{
-    background:none;
-    border:none;
-    color:var(--amber);
-    font-weight:600;
-    cursor:pointer;
-    font-family:'IBM Plex Sans', sans-serif;
-    font-size:13px;
-  }
   .eyebrow{
     font-family:'IBM Plex Mono', monospace;
     font-size:12px;
@@ -216,6 +183,7 @@
     margin-top:19px;
   }
   .add-row button:hover{ opacity:0.9; }
+  .add-row button:disabled{ opacity:0.6; cursor:default; }
 
   /* Filter bar */
   .filter-bar{
@@ -230,6 +198,25 @@
   .filter-bar select{
     max-width:160px;
   }
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .toolbar button, .toolbar select{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    font-weight:500;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .toolbar button:hover{ background:var(--bg); }
 
   /* Shelf list */
   .shelf-label{
@@ -304,6 +291,19 @@
   .badge.low{ background:#FCEFD9; color:#9C6A16; }
   .badge.out{ background:#FBE1DD; color:var(--coral); }
 
+  .item-notes{
+    width:100%;
+    margin-top:6px;
+    padding:6px 8px;
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--bg);
+    color:var(--ink-soft);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .item-notes:focus{ color:var(--ink); }
+
   .qty-controls{
     display:flex;
     align-items:center;
@@ -348,6 +348,32 @@
     border-radius:14px;
   }
 
+  .undo-toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--bg);
+    padding:10px 16px;
+    border-radius:10px;
+    font-size:13px;
+    display:flex;
+    gap:14px;
+    align-items:center;
+    box-shadow:0 6px 20px rgba(0,0,0,0.2);
+    z-index:10;
+  }
+  .undo-toast button{
+    background:none;
+    border:none;
+    color:var(--amber);
+    font-weight:600;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+  }
+
   footer{
     margin-top:48px;
     padding-top:16px;
@@ -361,11 +387,19 @@
 <body>
 <div class="wrap">
 
+  <div class="account-bar">
+    <div>Clinic: <strong id="clinic-label">…</strong> &nbsp;·&nbsp; Signed in as <strong id="user-label">…</strong></div>
+    <div class="right">
+      <button class="link-btn" id="switch-clinic-btn">Switch clinic</button>
+      <button class="link-btn" id="logout-btn">Log out</button>
+    </div>
+  </div>
+
   <header>
     <div>
       <p class="eyebrow">Community Health Project</p>
       <h1>Supply Shelf</h1>
-      <p class="sub">A simple inventory tracker for clinic supplies — add items, track quantities, and see at a glance what's running low.</p>
+      <p class="sub">A shared, real-time inventory tracker for clinic supplies — everyone on your team sees the same live list.</p>
     </div>
     <div class="header-actions">
       <button id="theme-toggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
@@ -425,67 +459,70 @@
     <button id="export-btn">⬇ Export shopping list (CSV)</button>
   </div>
 
-  <div id="list"></div>
+  <div id="list"><div class="empty">Loading your clinic's supply list…</div></div>
 
   <footer>
-    Supply Shelf — built as a student community project. Data is stored only in this browser (no server, no patient data).
+    Supply Shelf — built as a student community project. Data is shared live with your team via Firebase (no patient data is stored).
   </footer>
 
 </div>
 
-<script>
+<script type="module">
 /*
   ---- How this works (for the person reading/learning the code) ----
-  1. `items` is our list of supplies, stored as an array of objects.
-  2. We save it to the browser's localStorage every time it changes, so
-     your data is still there if you close the tab and come back.
-  3. `render()` clears the list on screen and redraws it based on `items`,
-     applying the current search text, category filter, and sort order.
-  4. Each item shows a "vial" — a little bar that fills up based on how
-     full its stock is compared to a max reference amount.
-  5. `lastRestocked` gets stamped automatically whenever you increase a
-     quantity, since that's the moment supplies were actually topped up.
-  6. Deleting an item doesn't remove it right away — it's held in
-     `pendingUndo` for a few seconds so you can undo a misclick.
+  1. Every worker signs in on login.html and enters a shared "clinic code".
+  2. All items for that clinic live in Firestore at:
+     clinics/{clinicCode}/items/{itemId}
+  3. `onSnapshot` below listens to that collection in real time — any
+     change anyone on the team makes (add, remove, restock) instantly
+     updates everyone else's screen, no refresh needed.
+  4. `render()` redraws the on-screen list from the local `items` array
+     every time new data comes in, applying search/filter/sort.
+  5. Deleting an item is undoable for a few seconds by re-writing the
+     exact same document back with `setDoc`.
 */
 
-const STORAGE_KEY = "supply-shelf-items";
+import { auth, db } from "./firebase-init.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  collection, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const CLINIC_KEY = "supply-shelf-clinic";
 const THEME_KEY = "supply-shelf-theme";
 
-let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-let pendingUndo = null; // { item, timeoutId }
-
-// If it's someone's very first time, seed a couple of example items
-// so the page isn't confusingly empty.
-if (items.length === 0) {
-  const today = new Date().toISOString().slice(0, 10);
-  items = [
-    { id: cryptoId(), name: "Nitrile gloves (box)", category: "PPE", qty: 8, threshold: 3, max: 20, notes: "", lastRestocked: today },
-    { id: cryptoId(), name: "Adhesive bandages", category: "Bandages", qty: 2, threshold: 5, max: 30, notes: "", lastRestocked: today },
-    { id: cryptoId(), name: "Alcohol wipes", category: "Cleaning", qty: 15, threshold: 5, max: 20, notes: "", lastRestocked: today }
-  ];
-  save();
-}
-
-function cryptoId() {
-  return Math.random().toString(36).slice(2, 10);
-}
-
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+let items = [];
+let currentUser = null;
+let clinicId = null;
+let itemsCollection = null;
+let pendingUndo = null;
+const noteDebounceTimers = {};
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
-
 function formatDate(dateStr) {
   if (!dateStr) return "never";
   const [y, m, d] = dateStr.split("-");
   return `${m}/${d}/${y}`;
 }
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+function statusOf(item) {
+  if (item.qty <= 0) return "out";
+  if (item.qty <= item.threshold) return "low";
+  return "ok";
+}
+function fillColor(status) {
+  if (status === "out") return "var(--coral)";
+  if (status === "low") return "var(--amber)";
+  return "var(--ink)";
+}
 
-// ---------- Dark mode ----------
+// ---------- Dark mode (a per-device preference, not shared data) ----------
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   document.getElementById("theme-toggle").textContent = theme === "dark" ? "☀️" : "🌙";
@@ -495,6 +532,37 @@ applyTheme(localStorage.getItem(THEME_KEY) || "light");
 document.getElementById("theme-toggle").addEventListener("click", () => {
   const current = document.documentElement.getAttribute("data-theme");
   applyTheme(current === "dark" ? "light" : "dark");
+});
+
+// ---------- Auth guard ----------
+// If nobody's signed in, or we don't know which clinic to open, bounce to login.
+onAuthStateChanged(auth, (user) => {
+  clinicId = localStorage.getItem(CLINIC_KEY);
+  if (!user || !clinicId) {
+    window.location.href = "login.html";
+    return;
+  }
+  currentUser = user;
+  document.getElementById("user-label").textContent = user.email;
+  document.getElementById("clinic-label").textContent = clinicId;
+
+  itemsCollection = collection(db, "clinics", clinicId, "items");
+  onSnapshot(itemsCollection, (snapshot) => {
+    items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  }, (err) => {
+    document.getElementById("list").innerHTML =
+      `<div class="empty">Couldn't load data: ${escapeHtml(err.message)}</div>`;
+  });
+});
+
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "login.html";
+});
+document.getElementById("switch-clinic-btn").addEventListener("click", () => {
+  localStorage.removeItem(CLINIC_KEY);
+  window.location.href = "login.html";
 });
 
 // ---------- CSV export ----------
@@ -519,13 +587,11 @@ function exportCSV() {
 document.getElementById("export-btn").addEventListener("click", exportCSV);
 
 // ---------- Undo delete ----------
-function removeItemWithUndo(id) {
-  const index = items.findIndex(i => i.id === id);
-  if (index === -1) return;
-  const [removed] = items.splice(index, 1);
-  save();
-  render();
-  showUndoToast(removed);
+async function removeItemWithUndo(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  await deleteDoc(doc(db, "clinics", clinicId, "items", id));
+  showUndoToast(item);
 }
 
 function showUndoToast(removedItem) {
@@ -542,31 +608,18 @@ function showUndoToast(removedItem) {
     toast.remove();
     pendingUndo = null;
   }, 5000);
-
   pendingUndo = { item: removedItem, timeoutId };
 
-  toast.querySelector("#undo-btn").addEventListener("click", () => {
-    items.push(removedItem);
-    save();
-    render();
+  toast.querySelector("#undo-btn").addEventListener("click", async () => {
+    const { id, ...data } = removedItem;
+    await setDoc(doc(db, "clinics", clinicId, "items", id), data);
     clearTimeout(timeoutId);
     toast.remove();
     pendingUndo = null;
   });
 }
 
-function statusOf(item) {
-  if (item.qty <= 0) return "out";
-  if (item.qty <= item.threshold) return "low";
-  return "ok";
-}
-
-function fillColor(status) {
-  if (status === "out") return "var(--coral)";
-  if (status === "low") return "var(--amber)";
-  return "var(--ink)";
-}
-
+// ---------- Sorting ----------
 function sortItems(list) {
   const sortBy = document.getElementById("sort-select").value;
   const sorted = [...list];
@@ -577,13 +630,13 @@ function sortItems(list) {
   } else if (sortBy === "restocked") {
     sorted.sort((a, b) => (a.lastRestocked || "").localeCompare(b.lastRestocked || ""));
   } else {
-    // "urgent": out of stock first, then low stock, then ok — each group by qty ascending
     const rank = { out: 0, low: 1, ok: 2 };
     sorted.sort((a, b) => rank[statusOf(a)] - rank[statusOf(b)] || a.qty - b.qty);
   }
   return sorted;
 }
 
+// ---------- Render ----------
 function render() {
   const list = document.getElementById("list");
   const query = document.getElementById("search").value.trim().toLowerCase();
@@ -599,13 +652,12 @@ function render() {
   list.innerHTML = "";
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty">Nothing here yet. Add a supply above to start tracking your shelf.</div>`;
+    list.innerHTML = items.length === 0
+      ? `<div class="empty">Nothing here yet. Add your clinic's first supply above.</div>`
+      : `<div class="empty">No items match your search/filter.</div>`;
     return;
   }
 
-  // Group by category for a shelf-by-shelf feel (groups appear in the
-  // order their first item was sorted into, so "most urgent" still
-  // surfaces the most urgent category first)
   const groups = {};
   const groupOrder = [];
   filtered.forEach(item => {
@@ -625,6 +677,7 @@ function render() {
     groups[category].forEach(item => {
       const status = statusOf(item);
       const fillPct = Math.max(0, Math.min(100, (item.qty / item.max) * 100));
+      const restockedBy = item.restockedBy ? ` by ${escapeHtml(item.restockedBy)}` : "";
 
       const row = document.createElement("div");
       row.className = "item";
@@ -637,7 +690,7 @@ function render() {
             ${status === "low" ? '<span class="badge low">low stock</span>' : ""}
             ${status === "out" ? '<span class="badge out">out of stock</span>' : ""}
           </p>
-          <p class="item-meta">low-stock alert at ${item.threshold} &nbsp;·&nbsp; restocked ${formatDate(item.lastRestocked)} &nbsp;·&nbsp; <button class="remove-btn" data-id="${item.id}">remove</button></p>
+          <p class="item-meta">low-stock alert at ${item.threshold} &nbsp;·&nbsp; restocked ${formatDate(item.lastRestocked)}${restockedBy} &nbsp;·&nbsp; <button class="remove-btn" data-id="${item.id}">remove</button></p>
           <input type="text" class="item-notes" data-id="${item.id}" placeholder="Add a note…" value="${escapeHtml(item.notes || "")}">
         </div>
         <div class="qty-controls">
@@ -651,14 +704,8 @@ function render() {
   });
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// Event: add new item
-document.getElementById("add-btn").addEventListener("click", () => {
+// ---------- Add item ----------
+document.getElementById("add-btn").addEventListener("click", async () => {
   const nameInput = document.getElementById("in-name");
   const name = nameInput.value.trim();
   if (!name) {
@@ -668,57 +715,62 @@ document.getElementById("add-btn").addEventListener("click", () => {
   const category = document.getElementById("in-category").value;
   const qty = parseInt(document.getElementById("in-qty").value, 10) || 0;
   const threshold = parseInt(document.getElementById("in-threshold").value, 10) || 0;
-  const max = Math.max(qty, threshold * 4, 10); // reference point for the vial fill
+  const max = Math.max(qty, threshold * 4, 10);
 
-  items.push({ id: cryptoId(), name, category, qty, threshold, max, notes: "", lastRestocked: todayStr() });
-  save();
-  render();
+  await addDoc(itemsCollection, {
+    name, category, qty, threshold, max,
+    notes: "",
+    lastRestocked: todayStr(),
+    restockedBy: currentUser.email
+  });
 
   nameInput.value = "";
   nameInput.focus();
 });
 
-// Event delegation: qty buttons + remove buttons
-document.getElementById("list").addEventListener("click", (e) => {
+// ---------- Qty buttons + remove ----------
+document.getElementById("list").addEventListener("click", async (e) => {
   const btn = e.target.closest("button");
   if (!btn) return;
   const id = btn.dataset.id;
 
   if (btn.classList.contains("remove-btn")) {
-    removeItemWithUndo(id);
+    await removeItemWithUndo(id);
     return;
   }
 
   const item = items.find(i => i.id === id);
   if (!item) return;
+  const ref = doc(db, "clinics", clinicId, "items", id);
 
   if (btn.dataset.action === "inc") {
-    item.qty += 1;
-    item.lastRestocked = todayStr(); // an increase counts as a restock
+    await updateDoc(ref, {
+      qty: item.qty + 1,
+      lastRestocked: todayStr(),
+      restockedBy: currentUser.email
+    });
   }
   if (btn.dataset.action === "dec") {
-    item.qty = Math.max(0, item.qty - 1);
+    await updateDoc(ref, { qty: Math.max(0, item.qty - 1) });
   }
-
-  save();
-  render();
 });
 
-// Event delegation: notes field (typing updates the item's notes)
+// ---------- Notes (debounced so we don't write on every keystroke) ----------
 document.getElementById("list").addEventListener("input", (e) => {
   if (!e.target.classList.contains("item-notes")) return;
-  const item = items.find(i => i.id === e.target.dataset.id);
-  if (!item) return;
-  item.notes = e.target.value;
-  save();
+  const id = e.target.dataset.id;
+  const value = e.target.value;
+
+  clearTimeout(noteDebounceTimers[id]);
+  noteDebounceTimers[id] = setTimeout(async () => {
+    await updateDoc(doc(db, "clinics", clinicId, "items", id), { notes: value });
+  }, 500);
 });
 
-// Search + filter + sort
+// ---------- Search + filter + sort ----------
 document.getElementById("search").addEventListener("input", render);
 document.getElementById("filter-category").addEventListener("change", render);
 document.getElementById("sort-select").addEventListener("change", render);
-
-render();
 </script>
 </body>
 </html>
