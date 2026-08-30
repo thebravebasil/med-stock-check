@@ -21,7 +21,7 @@ Built as a student community-service project by **Mohammad Basil**.
 
 ## Why I built this
 
-I'm in 7th grade and I want to go into the medical field someday. I wanted to find a way to give back to my community now, even before I'm old enough to volunteer at a hospital, so I built a tool that could actually save clinic staff time and help make sure supplies like gloves and bandages never run out without anyone noticing.
+I'm in 8th grade and I want to go into the medical field someday. I wanted to find a way to give back to my community now, even before I'm old enough to volunteer at a hospital, so I built a tool that could actually save clinic staff time and help make sure supplies like gloves and bandages never run out without anyone noticing.
 
 ## Pages
 
