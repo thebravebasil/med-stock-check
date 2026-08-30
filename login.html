@@ -75,6 +75,16 @@
   }
   .google-btn:hover{ background:var(--bg); }
   .google-btn:disabled{ opacity:0.6; cursor:default; }
+  .link-btn{
+    background:none; border:none; color:var(--ink-soft); text-decoration:underline;
+    cursor:pointer; font-size:12px; font-family:'IBM Plex Sans', sans-serif; padding:0;
+  }
+  .link-btn:hover{ color:var(--ink); }
+  .success{
+    background:#DCEEE4; color:var(--ink); font-size:13px; padding:10px 12px;
+    border-radius:8px; margin-bottom:14px; display:none;
+  }
+  .success.show{ display:block; }
 </style>
 </head>
 <body>
@@ -89,6 +99,7 @@
   </div>
 
   <div id="error-box" class="error"></div>
+  <div id="success-box" class="success"></div>
 
   <form id="auth-form">
     <div class="field">
@@ -99,6 +110,7 @@
       <label for="password">Password</label>
       <input id="password" type="password" required autocomplete="current-password" minlength="6">
       <p class="hint" id="pw-hint" style="display:none;">At least 6 characters.</p>
+      <p class="hint" id="forgot-wrap"><button type="button" class="link-btn" id="forgot-btn">Forgot password?</button></p>
     </div>
     <div class="field">
       <label for="clinic-code">Clinic code</label>
@@ -128,6 +140,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  sendPasswordResetEmail,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
@@ -141,6 +154,7 @@ const tabSignUp = document.getElementById("tab-signup");
 const submitBtn = document.getElementById("submit-btn");
 const pwHint = document.getElementById("pw-hint");
 const errorBox = document.getElementById("error-box");
+const successBox = document.getElementById("success-box");
 const form = document.getElementById("auth-form");
 
 function setMode(newMode) {
@@ -150,14 +164,36 @@ function setMode(newMode) {
   submitBtn.textContent = mode === "signin" ? "Sign in" : "Create account";
   pwHint.style.display = mode === "signup" ? "block" : "none";
   errorBox.classList.remove("show");
+  successBox.classList.remove("show");
 }
 tabSignIn.addEventListener("click", () => setMode("signin"));
 tabSignUp.addEventListener("click", () => setMode("signup"));
 
 function showError(message) {
+  successBox.classList.remove("show");
   errorBox.textContent = message;
   errorBox.classList.add("show");
 }
+function showSuccess(message) {
+  errorBox.classList.remove("show");
+  successBox.textContent = message;
+  successBox.classList.add("show");
+}
+
+document.getElementById("forgot-btn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  if (!email) {
+    showError("Type your email above first, then click 'Forgot password?' again.");
+    document.getElementById("email").focus();
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showSuccess(`Password reset email sent to ${email}. Check your inbox (and spam folder).`);
+  } catch (err) {
+    showError(friendlyError(err));
+  }
+});
 
 // Friendlier text for common Firebase error codes
 function friendlyError(err) {
@@ -197,6 +233,7 @@ document.getElementById("google-btn").addEventListener("click", async () => {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   errorBox.classList.remove("show");
+  successBox.classList.remove("show");
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
