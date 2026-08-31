@@ -402,6 +402,7 @@
       <p class="sub">A shared, real-time inventory tracker for clinic supplies — everyone on your team sees the same live list.</p>
     </div>
     <div class="header-actions">
+      <button id="feedback-btn" class="icon-btn" title="Send feedback" aria-label="Send feedback">💬</button>
       <button id="theme-toggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
     </div>
   </header>
@@ -521,6 +522,11 @@ function fillColor(status) {
   if (status === "low") return "var(--amber)";
   return "var(--ink)";
 }
+
+const FEEDBACK_FORM_URL = "https://forms.gle/fE1vTugKLotgsaJWA";
+document.getElementById("feedback-btn").addEventListener("click", () => {
+  window.open(FEEDBACK_FORM_URL, "_blank", "noopener");
+});
 
 // ---------- Dark mode (a per-device preference, not shared data) ----------
 function applyTheme(theme) {
