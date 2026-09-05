@@ -185,6 +185,26 @@
   .add-row button:hover{ opacity:0.9; }
   .add-row button:disabled{ opacity:0.6; cursor:default; }
 
+  .offline-banner{
+    display:none;
+    background:#FCEFD9; color:#9C6A16; font-size:13px; font-weight:600;
+    padding:9px 14px; border-radius:10px; margin-bottom:16px; text-align:center;
+  }
+  .offline-banner.show{ display:block; }
+
+  .form-message{
+    display:none;
+    font-size:13px; padding:9px 12px; border-radius:8px; margin-top:12px;
+  }
+  .form-message.show{ display:block; }
+  .form-message.error{ background:#FBE1DD; color:var(--coral); }
+  .form-message.warning{ background:#FCEFD9; color:#9C6A16; }
+  .form-message.warning button{
+    background:none; border:none; text-decoration:underline; cursor:pointer;
+    font-weight:600; color:#9C6A16; font-family:'IBM Plex Sans', sans-serif; font-size:13px;
+    padding:0; margin-left:6px;
+  }
+
   /* Filter bar */
   .filter-bar{
     display:flex;
@@ -395,6 +415,8 @@
     </div>
   </div>
 
+  <div class="offline-banner" id="offline-banner">You're offline — changes won't save until your connection comes back.</div>
+
   <header>
     <div>
       <p class="eyebrow">Community Health Project</p>
@@ -435,6 +457,7 @@
       </div>
       <button id="add-btn">Add item</button>
     </div>
+    <div class="form-message" id="add-message"></div>
   </section>
 
   <div class="filter-bar">
@@ -528,6 +551,27 @@ document.getElementById("feedback-btn").addEventListener("click", () => {
   window.open(FEEDBACK_FORM_URL, "_blank", "noopener");
 });
 
+// ---------- Offline detection ----------
+function updateOfflineBanner() {
+  document.getElementById("offline-banner").classList.toggle("show", !navigator.onLine);
+}
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
+
+// Shared helper: run an async Firestore action, and if it fails, show a
+// clear message instead of failing silently. Used everywhere we write data.
+async function trySave(action, failureMessage) {
+  try {
+    await action();
+    return true;
+  } catch (err) {
+    console.error(err);
+    alert(failureMessage + "\n\n(" + err.message + ")");
+    return false;
+  }
+}
+
 // ---------- Dark mode (a per-device preference, not shared data) ----------
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
@@ -596,8 +640,11 @@ document.getElementById("export-btn").addEventListener("click", exportCSV);
 async function removeItemWithUndo(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  await deleteDoc(doc(db, "clinics", clinicId, "items", id));
-  showUndoToast(item);
+  const ok = await trySave(
+    () => deleteDoc(doc(db, "clinics", clinicId, "items", id)),
+    "Couldn't remove that item — check your connection and try again."
+  );
+  if (ok) showUndoToast(item);
 }
 
 function showUndoToast(removedItem) {
@@ -618,10 +665,15 @@ function showUndoToast(removedItem) {
 
   toast.querySelector("#undo-btn").addEventListener("click", async () => {
     const { id, ...data } = removedItem;
-    await setDoc(doc(db, "clinics", clinicId, "items", id), data);
-    clearTimeout(timeoutId);
-    toast.remove();
-    pendingUndo = null;
+    const ok = await trySave(
+      () => setDoc(doc(db, "clinics", clinicId, "items", id), data),
+      "Couldn't undo that — check your connection and try again."
+    );
+    if (ok) {
+      clearTimeout(timeoutId);
+      toast.remove();
+      pendingUndo = null;
+    }
   });
 }
 
@@ -711,28 +763,71 @@ function render() {
 }
 
 // ---------- Add item ----------
-document.getElementById("add-btn").addEventListener("click", async () => {
+function showFormMessage(text, type) {
+  const box = document.getElementById("add-message");
+  box.textContent = text;
+  box.className = `form-message show ${type}`;
+}
+function clearFormMessage() {
+  const box = document.getElementById("add-message");
+  box.className = "form-message";
+}
+
+async function handleAddItem(skipDuplicateCheck) {
   const nameInput = document.getElementById("in-name");
+  const addBtn = document.getElementById("add-btn");
   const name = nameInput.value.trim();
+  clearFormMessage();
+
   if (!name) {
     nameInput.focus();
     return;
   }
+
+  // Nice-to-have: warn about likely duplicates instead of silently splitting stock
+  if (!skipDuplicateCheck) {
+    const dupe = items.find(i => i.name.trim().toLowerCase() === name.toLowerCase());
+    if (dupe) {
+      const box = document.getElementById("add-message");
+      box.className = "form-message show warning";
+      box.innerHTML = `"${escapeHtml(dupe.name)}" already exists. <button id="add-anyway-btn">Add anyway</button>`;
+      document.getElementById("add-anyway-btn").addEventListener("click", () => handleAddItem(true));
+      return;
+    }
+  }
+
   const category = document.getElementById("in-category").value;
-  const qty = parseInt(document.getElementById("in-qty").value, 10) || 0;
-  const threshold = parseInt(document.getElementById("in-threshold").value, 10) || 0;
+  // Nice-to-have: block negative numbers instead of letting the vial math break
+  const qty = Math.max(0, parseInt(document.getElementById("in-qty").value, 10) || 0);
+  const threshold = Math.max(0, parseInt(document.getElementById("in-threshold").value, 10) || 0);
   const max = Math.max(qty, threshold * 4, 10);
 
-  await addDoc(itemsCollection, {
-    name, category, qty, threshold, max,
-    notes: "",
-    lastRestocked: todayStr(),
-    restockedBy: currentUser.email
-  });
+  addBtn.disabled = true;
+  addBtn.textContent = "Adding…";
 
-  nameInput.value = "";
-  nameInput.focus();
-});
+  const saved = await trySave(
+    () => addDoc(itemsCollection, {
+      name, category, qty, threshold, max,
+      notes: "",
+      lastRestocked: todayStr(),
+      restockedBy: currentUser.email
+    }),
+    "Couldn't add that item — check your connection and try again."
+  );
+
+  addBtn.disabled = false;
+  addBtn.textContent = "Add item";
+
+  // Only clear the form on success, so a failed save doesn't lose what was typed
+  if (saved) {
+    nameInput.value = "";
+    document.getElementById("in-qty").value = 10;
+    document.getElementById("in-threshold").value = 3;
+    nameInput.focus();
+  }
+}
+
+document.getElementById("add-btn").addEventListener("click", () => handleAddItem(false));
 
 // ---------- Qty buttons + remove ----------
 document.getElementById("list").addEventListener("click", async (e) => {
@@ -750,14 +845,15 @@ document.getElementById("list").addEventListener("click", async (e) => {
   const ref = doc(db, "clinics", clinicId, "items", id);
 
   if (btn.dataset.action === "inc") {
-    await updateDoc(ref, {
+    await trySave(() => updateDoc(ref, {
       qty: item.qty + 1,
       lastRestocked: todayStr(),
       restockedBy: currentUser.email
-    });
+    }), "Couldn't update that item — check your connection and try again.");
   }
   if (btn.dataset.action === "dec") {
-    await updateDoc(ref, { qty: Math.max(0, item.qty - 1) });
+    await trySave(() => updateDoc(ref, { qty: Math.max(0, item.qty - 1) }),
+      "Couldn't update that item — check your connection and try again.");
   }
 });
 
@@ -769,7 +865,10 @@ document.getElementById("list").addEventListener("input", (e) => {
 
   clearTimeout(noteDebounceTimers[id]);
   noteDebounceTimers[id] = setTimeout(async () => {
-    await updateDoc(doc(db, "clinics", clinicId, "items", id), { notes: value });
+    await trySave(
+      () => updateDoc(doc(db, "clinics", clinicId, "items", id), { notes: value }),
+      "Couldn't save that note — check your connection and try again."
+    );
   }, 500);
 });
 
@@ -777,6 +876,16 @@ document.getElementById("list").addEventListener("input", (e) => {
 document.getElementById("search").addEventListener("input", render);
 document.getElementById("filter-category").addEventListener("change", render);
 document.getElementById("sort-select").addEventListener("change", render);
+
+// Nice-to-have: clamp qty/threshold to non-negative as the person types,
+// since typing "-5" directly can bypass the input's min="0" in some browsers
+["in-qty", "in-threshold"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (e.target.value !== "" && Number(e.target.value) < 0) {
+      e.target.value = 0;
+    }
+  });
+});
 </script>
 </body>
 </html>
