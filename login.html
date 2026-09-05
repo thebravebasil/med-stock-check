@@ -5,63 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign in — Supply Shelf</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#EAF0EC; --card:#FFFFFF; --ink:#1B4B43; --ink-soft:#4C6B64;
-    --amber:#E8A33D; --coral:#E2584A; --line:#D3DED8;
+    --bg:#F8F4ED; --card:#FFFFFF; --ink:#1A4D3E; --ink-soft:#5A5A5A;
+    --amber:#C9A84C; --coral:#E74C3C; --line:rgba(26,77,62,0.12);
   }
   *{box-sizing:border-box;}
   body{
     margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif;
+    background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
     -webkit-font-smoothing:antialiased; padding:20px;
   }
   .card{
     width:100%; max-width:380px; background:var(--card);
     border:1px solid var(--line); border-radius:16px; padding:28px;
+    box-shadow:0 8px 32px rgba(26,77,62,0.12);
   }
   .eyebrow{
-    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.12em;
-    text-transform:uppercase; color:var(--ink-soft); margin:0 0 6px;
+    font-family:'Inter', sans-serif; font-size:12px; font-weight:600; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--amber); margin:0 0 6px;
   }
-  h1{ font-family:'Fraunces', serif; font-weight:600; font-size:28px; margin:0 0 6px; }
+  h1{ font-family:'Playfair Display', serif; font-weight:700; font-size:28px; margin:0 0 6px; }
   .sub{ color:var(--ink-soft); font-size:14px; margin:0 0 22px; }
   .mode-toggle{
-    display:flex; gap:6px; background:var(--bg); border-radius:10px; padding:4px; margin-bottom:20px;
+    display:flex; gap:6px; background:var(--bg); border-radius:100px; padding:4px; margin-bottom:20px;
   }
   .mode-toggle button{
-    flex:1; padding:8px; border:none; border-radius:7px; background:none;
-    font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:13px;
+    flex:1; padding:8px; border:none; border-radius:100px; background:none;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:13px;
     color:var(--ink-soft); cursor:pointer;
   }
   .mode-toggle button.active{ background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
   label{
-    display:block; font-size:11px; font-family:'IBM Plex Mono', monospace; color:var(--ink-soft);
+    display:block; font-size:11px; font-family:'Inter', sans-serif; font-weight:600; color:var(--ink-soft);
     text-transform:uppercase; letter-spacing:0.06em; margin:0 0 5px;
   }
   .field{ margin-bottom:14px; }
   input{
-    width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px;
-    font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:var(--ink); background:#fff;
+    width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:10px;
+    font-family:'Inter', sans-serif; font-size:14px; color:var(--ink); background:#fff;
   }
-  input:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+  input:focus{ outline:2px solid var(--amber); outline-offset:1px; }
   .hint{ font-size:12px; color:var(--ink-soft); margin-top:5px; }
   button.submit{
-    width:100%; background:var(--ink); color:#fff; border:none; border-radius:9px;
-    padding:12px; font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:14px;
-    cursor:pointer; margin-top:6px;
+    width:100%; background:var(--ink); color:#fff; border:none; border-radius:100px;
+    padding:13px; font-family:'Inter', sans-serif; font-weight:600; font-size:14px;
+    cursor:pointer; margin-top:6px; transition:background 0.25s ease, transform 0.25s ease;
   }
-  button.submit:hover{ opacity:0.92; }
-  button.submit:disabled{ opacity:0.6; cursor:default; }
+  button.submit:hover{ background:#0F3328; transform:translateY(-1px); }
+  button.submit:disabled{ opacity:0.6; cursor:default; transform:none; }
   .error{
-    background:#FBE1DD; color:var(--coral); font-size:13px; padding:10px 12px;
-    border-radius:8px; margin-bottom:14px; display:none;
+    background:rgba(231,76,60,0.1); color:var(--coral); font-size:13px; padding:10px 12px;
+    border-radius:10px; margin-bottom:14px; display:none;
   }
   .error.show{ display:block; }
   .divider{
     display:flex; align-items:center; gap:10px; margin:18px 0;
-    color:var(--ink-soft); font-size:12px; font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-soft); font-size:12px; font-family:'Inter', sans-serif; font-weight:600;
     text-transform:uppercase; letter-spacing:0.06em;
   }
   .divider::before, .divider::after{
@@ -69,20 +70,20 @@
   }
   .google-btn{
     width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
-    background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:9px;
-    padding:11px; font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:14px;
-    cursor:pointer;
+    background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:100px;
+    padding:12px; font-family:'Inter', sans-serif; font-weight:600; font-size:14px;
+    cursor:pointer; transition:background 0.25s ease;
   }
   .google-btn:hover{ background:var(--bg); }
   .google-btn:disabled{ opacity:0.6; cursor:default; }
   .link-btn{
     background:none; border:none; color:var(--ink-soft); text-decoration:underline;
-    cursor:pointer; font-size:12px; font-family:'IBM Plex Sans', sans-serif; padding:0;
+    cursor:pointer; font-size:12px; font-family:'Inter', sans-serif; padding:0;
   }
-  .link-btn:hover{ color:var(--ink); }
+  .link-btn:hover{ color:var(--amber); }
   .success{
-    background:#DCEEE4; color:var(--ink); font-size:13px; padding:10px 12px;
-    border-radius:8px; margin-bottom:14px; display:none;
+    background:rgba(26,77,62,0.08); color:var(--ink); font-size:13px; padding:10px 12px;
+    border-radius:10px; margin-bottom:14px; display:none;
   }
   .success.show{ display:block; }
 </style>
